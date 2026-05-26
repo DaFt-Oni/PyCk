@@ -1,0 +1,476 @@
+Metadata-Version: 2.4
+Name: pyck
+Version: 1.0.0
+Summary: A modern Python package manager and runtime toolkit
+License: MIT
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+
+# PyCk (pym)
+
+```
+  _____          _____  _     
+ |  __ \        |  __ \| |    
+ | |__) | _   _ | |  \/| | __ 
+ |  ___/ | | | || | __ | |/ / 
+ | |     | |_| || |__\ \   <  
+ |_|      \__, | \____/|_|\_\ 
+           __/ |                      
+          |___/                       
+```
+
+**Modern, Ultra-Fast Python Project Manager & Runtime Toolkit (Inspired by npm & uv)**
+
+[![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/)
+[![Platform Support](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-green.svg)](#)
+[![Dependency Engine](https://img.shields.io/badge/engine-uv-violet.svg)](https://github.com/astral-sh/uv)
+[![Standalone Build](https://img.shields.io/badge/bundler-pyinstaller-orange.svg)](#)
+
+---
+
+### Language / Idioma
+*   **English**: You are reading the English version.
+*   **Español**: Read the documentation in Spanish: [README.es.md (Versión en Español)](./README.es.md)
+
+---
+
+## Table of Contents
+1. [Overview](#overview)
+2. [Key Features](#key-features)
+3. [Architecture & Components](#architecture--components)
+4. [Installation & Setup](#installation--setup)
+   - [Method 1: Interactive Local Setup (Recommended)](#method-1-interactive-local-setup-recommended)
+   - [Method 2: Standalone Compiler Compilation](#method-2-standalone-compiler-compilation)
+5. [CLI Command Reference](#cli-command-reference)
+   - [pym init](#1-pym-init)
+   - [pym install](#2-pym-install--pym-i)
+   - [pym uninstall](#3-pym-uninstall--pym-remove--pym-un)
+   - [pym run](#4-pym-run--pym-r)
+   - [pym code](#5-pym-code)
+   - [pym shell](#6-pym-shell)
+   - [pym info](#7-pym-info)
+   - [pym list](#8-pym-list)
+6. [Configuration Files Specification](#configuration-files-specification)
+   - [pyckage.json](#pyckagejson)
+   - [pyckage.lock](#pyckagelock)
+
+---
+
+## Overview
+
+PyCk is an elegant, high-performance overlay on top of standard Python virtual environments and the fast uv dependency engine. 
+
+By introducing a familiar, declarative, npm-style project management paradigm directly to Python, it uses a central `pyckage.json` configuration to track metadata, dependencies, devDependencies, and custom scripts under a single executable command: `pym` (Python Manager).
+
+---
+
+## Key Features
+
+*   **Unified Declared Dependency Management**: Tracks dependencies directly inside `pyckage.json` (`dependencies` and `devDependencies`) and locks them with precision inside `pyckage.lock`.
+*   **UV-Powered Speeds**: Installs, upgrades, synchronizes, and uninstalls requirements at speed scales up to 10-100x faster than traditional pip by using Rust-powered dependency resolution behind the scenes.
+*   **Interactive Scaffolder (pym init)**: A colorized interactive scaffolding engine (inspired by Vite) that sets up your project name, author, scripts, and installs core packages on the fly.
+*   **Persistent PATH Installer (setup.py)**: A self-registering installer that links the global CLI to your user environment path (Registry-driven on Windows with dynamic system broadcasts; profile-driven on Unix).
+*   **Date-Branded Compiler (build_exe.py)**: Compiles your local PyCk codebase into self-contained single-file standalone binaries grouped neatly inside versioned folders (e.g. `bin/vYYYYMMDD_HHMMSS/pym.exe`).
+*   **Visual Receipt Visualizations**: Highlights package upgrades, fresh additions, or removals with clean, structured terminal layouts.
+
+---
+
+## Architecture & Components
+
+```
+   ┌────────────────────────────────────────────────────────┐
+   │                       pym CLI                          │
+   └────────────────────────────────────────────────────────┘
+                               │
+             ┌─────────────────┴─────────────────┐
+             ▼                                   ▼
+   ┌───────────────────┐               ┌───────────────────┐
+   │   Project State   │               │ Dependency Engine │
+   │  pyckage.json/lock│               │    (uv wrapper)   │
+   └───────────────────┘               └───────────────────┘
+             │                                   │
+             ▼                                   ▼
+   ┌───────────────────┐               ┌───────────────────┐
+   │ Environment Shell │               │   Local .venv     │
+   │  & Script Runner  │               │   Virtual Env     │
+   └───────────────────┘               └───────────────────┘
+```
+
+The system is comprised of three core layers:
+1. **The CLI Entry Point (pym.cli)**: Evaluates incoming terminal commands, handles console output encodings, and coordinates sub-module dispatch.
+2. **The Project State Engine (pym.engine)**: Parses the `pyckage.json`/`pyckage.lock` configurations, compiles lock trees, bootstraps isolated virtual environments, and routes installations.
+3. **The Utility Helpers (pym.utils)**: Manages console colors, ASCII table formatting, interactive question prompts, and environment variable loaders.
+
+---
+
+## Installation & Setup
+
+### Method 1: Interactive Local Setup (Recommended)
+This approach registers `pym` in editable mode inside your active Python installation and registers it persistently in your user/system PATH variable.
+
+Select the native installer script matching your operating system and preference:
+
+*   **Option A: Universal Python Installer (All OS)**
+    ```bash
+    python setup.py
+    ```
+*   **Option B: Native Windows Installer (`setup.bat`)**
+    Double-click on `setup.bat` or execute it in your Command Prompt / PowerShell:
+    ```cmd
+    setup.bat
+    ```
+*   **Option C: Native Unix Shell / Git Bash Installer (`setup.sh`)**
+    ```bash
+    sh setup.sh
+    ```
+
+Open a NEW terminal window to load the path, and type `pym --help` to confirm the command is active globally.
+
+### Method 2: Standalone Compiler Compilation
+If you prefer to compile a single-file standalone binary executable of PyCk to share or use independently:
+
+1. In the project root, run:
+   ```bash
+   python build_exe.py
+   ```
+2. The compilation finishes in seconds. Your compiled binary will reside under a versioned folder inside the root:
+   ```
+   bin/v[timestamp]/pym.exe (Windows)
+   bin/v[timestamp]/pym     (Unix)
+   ```
+3. Move this binary to any folder or system directory in your PATH.
+
+---
+
+## CLI Command Reference
+
+### 1. `pym init`
+Scaffolds a premium new Python project. Running the command without arguments launches the interactive, user-friendly CLI setup wizard.
+
+*   **Syntax**:
+    ```bash
+    pym init [options]
+    ```
+
+*   **Arguments & Options**:
+    | Option / Flag | Type | Description |
+    | :--- | :--- | :--- |
+    | `-n`, `--name <name>` | Option | Sets the project name in `pyckage.json` (Defaults to current directory name). |
+    | `-v`, `--version <ver>`| Option | Initial project version (Defaults to `0.1.0`). |
+    | `-d`, `--desc <desc>` | Option | Brief project description. |
+    | `-a`, `--author <auth>`| Option | Author contact or identifier. |
+    | `--private` | Flag | Registers project as private (True, default active state). |
+    | `--public` | Flag | Registers project as public (Sets `"private"` to `false`). |
+    | `-f`, `--framework <fw>`| Option | Scaffolds specified framework (`none`, `fastapi`, `flask`, `django`). |
+    | `--pytest` / `--no-pytest` | Flag | Explicitly enables or disables pytest configuration. |
+    | `--ruff` / `--no-ruff` | Flag | Explicitly enables or disables Ruff linter/formatter configuration. |
+    | `--docker` / `--no-docker` | Flag | Explicitly enables or disables production Dockerfile generation. |
+    | `--git` / `--no-git` | Flag | Explicitly enables or disables automated Git repository initialization (Active by default). |
+    | `--gitignore` / `--no-gitignore` | Flag | Explicitly enables or disables `.gitignore` generation (Active by default if Git is active). |
+
+    *Note: Providing any of these arguments via CLI bypasses the interactive question prompting loop, and any omitted configuration parameters default automatically to their base values.*
+
+*   **UI Questionnaire Parameters**:
+    - **Project Name**: Directs the name field in `pyckage.json` (Defaults to current folder name).
+    - **Version**: Initial project version (Defaults to `0.1.0`).
+    - **Description**: Brief project description.
+    - **Private project**: Toggle privacy key to true/false (Defaults to `True`).
+    - **Author**: The developer's identifier.
+    - **Web Framework**: Interactive dropdown selection `[None, FastAPI, Flask, Django]`.
+    - **Ruff**: Toggle to include Ruff for instant linting and formatting.
+    - **pytest**: Toggle to include pytest for unit test configurations.
+    - **Dockerfile**: Toggle to generate production-ready Docker configurations.
+    - **Initialize Git repository?**: Toggle to initialize a local Git repository (`git init`).
+    - **Generate .gitignore file?**: Toggle to generate a standard Python `.gitignore` (Only prompts if Git initialization is selected).
+*   **Example Usage**:
+    ```bash
+    pym init
+    ```
+*   **Expected Output**:
+    ```
+      _____          _____  _     
+     |  __ \        |  __ \| |    
+     | |__) | _   _ | |  \/| | __ 
+     |  ___/ | | | || | __ | |/ / 
+     | |     | |_| || |__\ \   <  
+     |_|      \__, | \____/|_|\_\ 
+               __/ |                      
+              |___/                       
+    --- PyCk Project Setup Wizard ---
+
+    ? Project Name (pyck-test): 
+    ? Version (0.1.0): 
+    ? Description (A Python project powered by PyCk): 
+    ? Private project? (y/n) [y]: 
+    ? Author (Developer): 
+    ? Choose Web Framework: [None, FastAPI, Flask, Django] [None]: 
+    ? Enable Ruff for linting & formatting? (y/n) [y]: 
+    ? Enable pytest for testing? (y/n) [y]: 
+    ? Add production-ready Dockerfile? (y/n) [n]: 
+
+    Initialising project 'pyck-test'...
+    Creating isolated virtual environment (.venv)...
+    ✔ Isolated environment (.venv) successfully created.
+    Installing standard project dependencies...
+    ✔ All packages successfully installed and locked!
+
+    🎉 PyCk Project Successfully Scaffolded!
+    To run your app in development mode, enter:
+       pym run dev
+    ```
+
+---
+
+### 2. `pym install` | `pym i`
+Synchronizes the virtual environment with the declared package specifications or installs new packages.
+
+*   **Syntax**:
+    ```bash
+    pym install [packages...] [options]
+    ```
+*   **Arguments & Options**:
+    | Argument / Option | Type | Description |
+    | :--- | :--- | :--- |
+    | `[packages...]` | Positional | Space-separated list of packages to install. If empty, syncs existing `pyckage.json` configuration. |
+    | `-D`, `--dev` | Flag | Registers the newly installed packages under `devDependencies` in `pyckage.json`. |
+    | `-g`, `--global` | Flag | Installs designated packages globally in the system-wide Python environment. |
+*   **Example Usage 1 (Synchronize Existing Environment)**:
+    ```bash
+    pym install
+    ```
+*   **Expected Output 1**:
+    ```
+    ✔ Dependencies already synced. 3 dependencies active in environment.
+    ```
+*   **Example Usage 2 (Install Packages in Environment)**:
+    ```bash
+    pym install requests
+    ```
+*   **Expected Output 2**:
+    ```
+    ✔ Dependency installation completed successfully.
+
+    ✔ Newly Installed / Added:
+      + requests==2.34.2
+      + certifi==2024.2.2
+      + charset-normalizer==3.3.2
+      + idna==3.7
+      + urllib3==2.2.1
+
+    ✔ Added requests to dependencies in pyckage.json.
+    ```
+
+---
+
+### 3. `pym uninstall` | `pym remove` | `pym un`
+Removes installed packages from both your virtual environment and the declarations in your configuration files.
+
+*   **Syntax**:
+    ```bash
+    pym uninstall <packages...>
+    ```
+*   **Arguments & Options**:
+    | Argument | Type | Description |
+    | :--- | :--- | :--- |
+    | `<packages...>` | Positional | Space-separated list of packages to remove. |
+*   **Example Usage**:
+    ```bash
+    pym uninstall requests
+    ```
+*   **Expected Output**:
+    ```
+    ✔ Dependency uninstallation completed successfully.
+
+    ✔ Newly Removed:
+      - requests==2.34.2
+
+    ✔ Removed requests from dependencies in pyckage.json.
+    ```
+
+---
+
+### 4. `pym run` | `pym r`
+Runs scripts defined in the `"scripts"` block of your `pyckage.json` while automatically injecting `.env` configurations.
+
+You can configure your custom tasks directly inside the `"scripts"` section of the `pyckage.json` configuration file as follows:
+```json
+"scripts": {
+  "dev": "python main.py",
+  "test": "pytest",
+  "lint": "ruff check",
+  "format": "ruff format"
+}
+```
+This allows unified execution of all project workflows.
+
+*   **Syntax**:
+    ```bash
+    pym run <script_name>
+    ```
+*   **Arguments & Options**:
+    | Argument | Type | Description |
+    | :--- | :--- | :--- |
+    | `<script_name>` | Positional | The exact key name of the script registered inside `pyckage.json` "scripts". |
+*   **Example Usage**:
+    ```bash
+    pym run dev
+    ```
+*   **Expected Output**:
+    ```
+    [INFO] Loaded environment variables from .env
+    [RUN] python main.py
+    Hello, PyCk is running!
+    ```
+
+---
+
+### 5. `pym code`
+Generates boilerplate starter code structures for API endpoints or tests instantly.
+
+*   **Syntax**:
+    ```bash
+    pym code <type>
+    ```
+*   **Arguments & Options**:
+    | Argument | Type | Description |
+    | :--- | :--- | :--- |
+    | `<type>` | Positional | The type of scaffold to build. Accepted values: `api` (FastAPI setup) or `test` (pytest setup). |
+*   **Example Usage**:
+    ```bash
+    pym code api
+    ```
+*   **Expected Output**:
+    ```
+    [SUCCESS] Scaffolded FastAPI template at main.py
+    ```
+
+---
+
+### 6. `pym shell`
+Drops you into an active, isolated terminal session initialized within the local virtual environment.
+
+*   **Syntax**:
+    ```bash
+    pym shell
+    ```
+*   **Example Usage**:
+    ```bash
+    pym shell
+    ```
+*   **Expected Output**:
+    ```
+    [INFO] Spawning subshell activated in .venv. Type 'exit' to return.
+    Microsoft Windows [Version 10.0.22631]
+    (pyck-venv) C:\Users\mil156\OneDrive - Corteva\Escritorio\PyCk>
+    ```
+
+---
+
+### 7. `pym info`
+Displays a gorgeous dashboard panel showing your current project environment health.
+
+*   **Syntax**:
+    ```bash
+    pym info
+    ```
+*   **Example Usage**:
+    ```bash
+    pym info
+    ```
+*   **Expected Output**:
+    ```
+    ┌────────────────────────────────────────────────────────┐
+    │                  PyCk Project Information              │
+    ├────────────────────────────────────────────────────────┤
+    │ Name:        my-app                                    │
+    │ Version:     0.1.0                                     │
+    │ Author:      Developer                                 │
+    │ Private:     True                                      │
+    │ Environment: C:\Users\mil156\...\.venv                 │
+    │ Python:      3.13.0                                     │
+    │ venv Size:   42.5 MB                                   │
+    │ Core Deps:   2                                         │
+    │ Dev Deps:    1                                         │
+    │ Transitive:  12                                        │
+    └────────────────────────────────────────────────────────┘
+    ```
+
+---
+
+### 8. `pym list`
+Displays an elegant, visual ASCII table listing all packages currently active inside `.venv`.
+
+*   **Syntax**:
+    ```bash
+    pym list
+    ```
+*   **Example Usage**:
+    ```bash
+    pym list
+    ```
+*   **Expected Output**:
+    ```
+    ┌────────────────────────────────────────────────────────┐
+    │               Active Virtual Environment Packages      │
+    ├────────────────────────────────────────────────────────┤
+    │ [Core Dependencies]                                    │
+    │   fastapi==0.136.1                                     │
+    │   requests==2.34.2                                     │
+    │                                                        │
+    │ [Development Dependencies]                             │
+    │   pytest==8.0.0                                        │
+    │                                                        │
+    │ [Transitive Dependencies]                              │
+    │   annotated-types==0.7.0                               │
+    │   anyio==4.13.0                                        │
+    │   certifi==2024.2.2                                    │
+    │   idna==3.7                                            │
+    │   sniffio==1.3.1                                       │
+    └────────────────────────────────────────────────────────┘
+    ```
+
+---
+
+## Configuration Files Specification
+
+### `pyckage.json`
+The central project configuration file. Written in standard JSON.
+
+```json
+{
+  "name": "my-pyck-app",
+  "version": "1.0.0",
+  "description": "A premium Python application managed by PyCk",
+  "author": "Developer Name <email@example.com>",
+  "private": true,
+  "python": "^3.13",
+  "engines": {
+    "python": "^3.13"
+  },
+  "scripts": {
+    "dev": "python main.py",
+    "test": "pytest"
+  },
+  "dependencies": {
+    "fastapi": "==0.136.1",
+    "requests": "==2.34.2"
+  },
+  "devDependencies": {
+    "pytest": "==8.0.0"
+  }
+}
+```
+
+### `pyckage.lock`
+Autogenerated lockfile. Tracks the resolved precise pinned version of every package installed in your dependency graph. Do not modify this file manually.
+
+---
+
+## License & Contributions
+
+Developed as a modern package manager paradigm for premium Python applications. Contributions, bug reports, and features are welcome.
+
+All intellectual property rights regarding the ultra-fast **uv** packaging engine belong to and are exclusively reserved by its original creators and maintainers at [Astral](https://astral.sh/). We deeply appreciate their exceptional open-source contributions to the Python ecosystem.
