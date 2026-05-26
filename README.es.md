@@ -134,11 +134,11 @@ Registra `pym` de manera persistente en tu PATH de usuario y lanza el Setup Wiza
 
 *   **Windows (PowerShell)**:
     ```powershell
-    irm https://github.com/DaFt-Oni/PyCk/blob/main/bin/install_cli.ps1 | iex
+    irm https://raw.githubusercontent.com/DaFt-Oni/PyCk/main/bin/install_cli.ps1 | iex
     ```
 *   **Unix / macOS (Shell)**:
     ```bash
-    curl -fsSL https://github.com/DaFt-Oni/PyCk/blob/main/bin/install_cli.sh | bash
+    curl -fsSL https://raw.githubusercontent.com/DaFt-Oni/PyCk/main/bin/install_cli.sh | bash
     ```
 
 ### Método 2: Instalación Local Interactiva (Desde el Código)

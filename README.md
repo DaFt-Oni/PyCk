@@ -134,11 +134,11 @@ Registers `pym` persistently in your system path and boots the Setup Wizard auto
 
 *   **Windows (PowerShell)**:
     ```powershell
-    irm https://github.com/DaFt-Oni/PyCk/blob/main/bin/install_cli.ps1 | iex
+    irm https://raw.githubusercontent.com/DaFt-Oni/PyCk/main/bin/install_cli.ps1 | iex
     ```
 *   **Unix / macOS (Shell)**:
     ```bash
-    curl -fsSL https://github.com/DaFt-Oni/PyCk/blob/main/bin/install_cli.sh | bash
+    curl -fsSL https://raw.githubusercontent.com/DaFt-Oni/PyCk/main/bin/install_cli.sh | bash
     ```
 
 ### Method 2: Interactive Local Setup (From Source)
