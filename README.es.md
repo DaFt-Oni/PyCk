@@ -22,7 +22,7 @@
 
 ### Idioma / Language
 *   **Español**: Estás leyendo la versión en español.
-*   **English**: Leer la documentación en Inglés: [README.md (Versión en Inglés)](./README.md)
+*   **English**: Read the documentation in English: [README.md (English Version)](./README.md)
 
 ---
 
