@@ -46,6 +46,7 @@ def show_help():
     {Colors.CYAN}update, upgrade{Colors.RESET}
                   Safe upgrade of all packages (or specific package) with quarantine checks
     {Colors.CYAN}config{Colors.RESET}          [NEW] View or modify global preferences (e.g. pym config set quarantineHours 48)
+    {Colors.CYAN}setup{Colors.RESET}           [NEW] Re-run the interactive global Setup Wizard & register environment PATH
 
 {Colors.BOLD}INSTALL OPTIONS:{Colors.RESET}
     {Colors.GRAY}-D, --dev{Colors.RESET}            Save installed packages as devDependencies
@@ -66,7 +67,8 @@ def show_help():
     pym run dev --allow-network
     pym config show
     pym config set quarantineHours 48
-    pym config wizard
+    pym setup
+
 """
     print(help_text)
 
@@ -171,7 +173,9 @@ def handle_init(args=[]):
         author = ask_text("Author", default=author)
         
         # Selection menus
-        framework = ask_select("Choose Web Framework:", ["None", "FastAPI", "Flask", "Django"], default_idx=0)
+        framework = ask_select("Choose Web Framework:", ["None (Vanilla)", "FastAPI", "Flask", "Django"], default_idx=0)
+        if framework == "None (Vanilla)":
+            framework = "None"
         use_ruff = ask_confirm("Enable Ruff for linting & formatting?", default=True)
         use_pytest = ask_confirm("Enable pytest for testing?", default=True)
         use_docker = ask_confirm("Add production-ready Dockerfile?", default=False)
@@ -912,21 +916,63 @@ def handle_clean():
         for p in list(cwd.rglob(target)):
             if ".venv" in p.parts:
                 continue
-            try:
-                if p.is_dir():
-                    for root, _, files in os.walk(p):
-                        for f in files:
-                            fp = Path(root) / f
-                            if fp.is_file():
-                                freed_bytes += fp.stat().st_size
+            if p.is_dir():
+                # Robust recursive unlinking first to calculate space and handle locks per file
+                files_deleted_in_dir = 0
+                bytes_freed_in_dir = 0
+                
+                # Delete files inside first
+                for root, dirs, files in os.walk(p, topdown=False):
+                    for name in files:
+                        fp = Path(root) / name
+                        try:
+                            f_size = fp.stat().st_size
+                            try:
+                                rel_p = fp.relative_to(cwd)
+                            except ValueError:
+                                rel_p = fp
+                            fp.unlink()
+                            bytes_freed_in_dir += f_size
+                            files_deleted_in_dir += 1
+                            print(f"  {Colors.GRAY}↳ Purgado:{Colors.RESET} {Colors.YELLOW}{rel_p}{Colors.RESET}")
+                        except Exception:
+                            pass
+                    for name in dirs:
+                        dp = Path(root) / name
+                        try:
+                            shutil.rmtree(dp)
+                        except Exception:
+                            pass
+                
+                # Now try to delete the main directory itself
+                try:
                     shutil.rmtree(p)
                     deleted_dirs += 1
-                else:
-                    freed_bytes += p.stat().st_size
+                    try:
+                        rel_dir = p.relative_to(cwd)
+                    except ValueError:
+                        rel_dir = p
+                    print(f"  {Colors.GREEN}✔ Eliminada carpeta:{Colors.RESET} {Colors.CYAN}{rel_dir}{Colors.RESET}")
+                except Exception:
+                    # If directory deletion fails (e.g., active .pyc file locks),
+                    # we still record the files we successfully removed!
+                    pass
+                
+                deleted_files += files_deleted_in_dir
+                freed_bytes += bytes_freed_in_dir
+            else:
+                try:
+                    f_size = p.stat().st_size
+                    try:
+                        rel_p = p.relative_to(cwd)
+                    except ValueError:
+                        rel_p = p
                     p.unlink()
+                    freed_bytes += f_size
                     deleted_files += 1
-            except Exception:
-                pass
+                    print(f"  {Colors.GRAY}↳ Purgado:{Colors.RESET} {Colors.YELLOW}{rel_p}{Colors.RESET}")
+                except Exception:
+                    pass
                 
     # 2. Clean explicit file wildcards
     for ext in file_extensions:
@@ -934,9 +980,15 @@ def handle_clean():
             if ".venv" in p.parts:
                 continue
             try:
-                freed_bytes += p.stat().st_size
+                f_size = p.stat().st_size
+                try:
+                    rel_p = p.relative_to(cwd)
+                except ValueError:
+                    rel_p = p
                 p.unlink()
+                freed_bytes += f_size
                 deleted_files += 1
+                print(f"  {Colors.GRAY}↳ Purgado:{Colors.RESET} {Colors.YELLOW}{rel_p}{Colors.RESET}")
             except Exception:
                 pass
                 
@@ -1096,13 +1148,8 @@ def handle_config(args):
         log_success(f"Configuración actualizada: {Colors.BOLD}{key}{Colors.RESET} = {Colors.GREEN}{val}{Colors.RESET}")
         
     elif sub in ("wizard", "setup"):
-        if CONFIG_FILE.is_file():
-            try:
-                CONFIG_FILE.unlink()
-            except Exception:
-                pass
         from pym.config import ensure_global_setup
-        ensure_global_setup()
+        ensure_global_setup(force_wizard=True)
         
     else:
         log_error(f"Subcomando de configuración desconocido: '{sub}'.")
@@ -1152,6 +1199,10 @@ def main():
             handle_update(args)
         elif cmd == "config":
             handle_config(args)
+        elif cmd == "setup":
+            from pym.config import ensure_global_setup
+            ensure_global_setup(force_wizard=True)
+            sys.exit(0)
         elif cmd in ("help", "--help", "-h"):
             show_help()
         else:

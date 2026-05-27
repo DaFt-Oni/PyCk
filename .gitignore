@@ -1,0 +1,73 @@
+# ==============================================================================
+# PyCk Gitignore Template
+# ==============================================================================
+
+# --- Python Bytecode & Cache debris ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.tox/
+.nosexy
+
+# --- Virtual Environments (Isolated Runtimes) ---
+.venv/
+venv/
+ENV/
+env/
+python/
+
+# --- Build, Distribution & Packaging ---
+build/
+dist/
+downloads/
+*.egg-info/
+.eggs/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+share/
+develop-eggs/
+installs/
+
+# --- Compiled standalone binary artifacts ---
+# Ignore compiled executables and setup bundles inside bin/ to prevent repo bloat and DPI proxy blocks.
+bin/v*/
+pym.spec
+pym_entry.py
+
+# --- User & Environment Specific Configuration ---
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.*.local
+!*.example
+!*.example.*
+
+# --- PyCk Internal Local State ---
+# Global config resides in home directory (~/.pyck/), but local sandbox homes are excluded
+.venv/.sandbox_home/
+
+# --- IDEs, Text Editors & Operating System Garbage ---
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini

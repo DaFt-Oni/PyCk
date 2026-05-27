@@ -15,22 +15,42 @@ BIN_DIR="$PYCK_DIR/bin"
 mkdir -p "$BIN_DIR"
 
 # 2. Setup symlink or runner script
-# In production, download compiled executable binary:
-# curl -fsSL "https://github.com/user/PyCk/releases/latest/download/pym" -o "$BIN_DIR/pym"
-# chmod +x "$BIN_DIR/pym"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+LATEST_DIR=$(ls -d "$SCRIPT_DIR"/v* 2>/dev/null | sort -r | head -n 1 || true)
 
-# Fallback: Create script wrapper
-cat << 'EOF' > "$BIN_DIR/pym"
+BINARY_COPIED=false
+if [ -n "$LATEST_DIR" ] && [ -f "$LATEST_DIR/pym" ]; then
+    echo -e "\033[92m✔ Copiando binario compilado pym desde $LATEST_DIR...\033[0m"
+    cp "$LATEST_DIR/pym" "$BIN_DIR/pym"
+    chmod +x "$BIN_DIR/pym"
+    BINARY_COPIED=true
+fi
+
+if [ "$BINARY_COPIED" = false ]; then
+    # Fallback si se ejecuta de forma aislada: busca cualquier ejecutable compilado en subcarpetas
+    FOUND_EXE=$(find "$SCRIPT_DIR" -type f -name "pym" | grep -v "/bin/pym" | head -n 1 || true)
+    if [ -n "$FOUND_EXE" ] && [ -f "$FOUND_EXE" ]; then
+        echo -e "\033[92m✔ Copiando binario compilado pym encontrado en $FOUND_EXE...\033[0m"
+        cp "$FOUND_EXE" "$BIN_DIR/pym"
+        chmod +x "$BIN_DIR/pym"
+        BINARY_COPIED=true
+    fi
+fi
+
+if [ "$BINARY_COPIED" = false ]; then
+    echo -e "\033[93m⚠ No se encontró un binario compilado pym. Creando lanzador de script Python...\033[0m"
+    cat << 'EOF' > "$BIN_DIR/pym"
 #!/usr/bin/env bash
 python3 -m pym.cli "$@"
 EOF
-chmod +x "$BIN_DIR/pym"
+    chmod +x "$BIN_DIR/pym"
+fi
 
 echo -e "\033[92m✔ Lanzador ejecutable pym instalado en $BIN_DIR/pym.\033[0m"
 
 # 3. Add to shell configuration persistently
 SHELL_CONFIG=""
-if [ -n "$ZHSR_VERSION" ] || [ -f "$HOME/.zshrc" ]; then
+if [ -n "$ZSH_VERSION" ] || [ -f "$HOME/.zshrc" ]; then
     SHELL_CONFIG="$HOME/.zshrc"
 elif [ -f "$HOME/.bashrc" ]; then
     SHELL_CONFIG="$HOME/.bashrc"
@@ -55,4 +75,8 @@ echo -e "\033[96m⚡ Lanzando el asistente de configuración interactivo...\033[
 sleep 1
 
 export PATH="$PATH:$BIN_DIR"
-python3 -m pym.cli info || true
+if [ -x "$BIN_DIR/pym" ]; then
+    "$BIN_DIR/pym" info || true
+else
+    python3 -m pym.cli info || true
+fi

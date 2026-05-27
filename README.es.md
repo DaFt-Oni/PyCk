@@ -127,11 +127,15 @@ Los scripts se ejecutan dentro de subprocesos con aislamiento lógico:
 
 ---
 
-## Instalación y Configuración
+## Métodos de Instalación y Configuración
 
-### Método 1: Instalador de una Línea desde Web (Recomendado)
-Registra `pym` de manera persistente en tu PATH de usuario y lanza el Setup Wizard de forma automática:
+PyCk ofrece múltiples rutas de despliegue diseñadas para desarrolladores locales, ingenieros de DevOps y administradores de sistemas que gestionan servidores de producción seguros y aislados.
 
+---
+
+### Método 1: Instalador de una Línea desde Web (En Línea / Interactivo)
+*   **Ideal para**: Instalaciones locales rápidas con conectividad a Internet.
+*   **Descripción**: Descarga la última versión, registra `pym` de forma persistente en tu `PATH` de variables de entorno de usuario, e inicia el Asistente de Configuración (Setup Wizard) automáticamente.
 *   **Windows (PowerShell)**:
     ```powershell
     irm https://raw.githubusercontent.com/DaFt-Oni/PyCk/main/bin/install_cli.ps1 | iex
@@ -141,33 +145,68 @@ Registra `pym` de manera persistente en tu PATH de usuario y lanza el Setup Wiza
     curl -fsSL https://raw.githubusercontent.com/DaFt-Oni/PyCk/main/bin/install_cli.sh | bash
     ```
 
-### Método 2: Instalación Local Interactiva (Desde el Código)
-Ejecuta los instaladores nativos en la raíz de tu clon local del repositorio:
-*   **Opción A: Instalador Python**: `python setup.py`
-*   **Opción B: Windows**: `setup.bat`
-*   **Opción C: Unix Shell**: `sh setup.sh`
+---
 
-### Método 3: Compilación con Ejecutable Standalone
-Para compilar PyCk a un único archivo binario autocontenido:
-1. En la raíz del repositorio corre:
-   ```bash
-   python build_exe.py
-   ```
-2. El ejecutable compilado estará bajo una carpeta versionada por fecha: `bin/v[timestamp]/pym.exe` (Windows) o `bin/v[timestamp]/pym` (Unix).
+### Método 2: Instalador Local / Fuera de Línea Standalone (Cero Dependencias)
+*   **Ideal para**: Servidores corporativos aislados (air-gapped), aprovisionamientos automáticos headless (Ansible, Chef) y entornos de alta seguridad donde la ejecución directa de binarios compilados para escribir en el sistema está restringida.
+*   **Paso 1**: Compila el ejecutable standalone usando la suite de empaquetado:
+    ```bash
+    python build_exe.py --include-installer
+    ```
+    *(Esto compila un binario autoinstalable `pym` y genera un script asistente de instalación en texto plano con cero dependencias llamado `install.py` justo al lado en la carpeta `bin/v[timestamp]/`)*.
+*   **Paso 2**: Elige uno de los modelos de despliegue:
+    *   **Método 2.1: Instalador Standalone Automatizable (`install.py`)**:
+        Copia la carpeta generada `bin/v[timestamp]/` a tu servidor objetivo y ejecuta el instalador:
+        ```bash
+        python install.py
+        ```
+        *(Este script de Python en texto plano realiza el pre-aprovisionamiento de carpetas de manera limpia, copia el binario de forma permanente, registra las variables de PATH del usuario de forma persistente y guarda tus preferencias globales. Los equipos de auditoría de seguridad corporativos pueden inspeccionar visualmente `install.py` antes de correrlo)*.
+    *   **Método 2.2: Autoinstalación Directa de Ejecutable**:
+        Simplemente copia el ejecutable compilado (`pym.exe` o `pym`) a tu máquina y ejecútalo directamente en la terminal. Como no existe archivo de configuración previa, ¡limpiará la pantalla y lanzará el asistente interactivo en su primera corrida!
 
 ---
 
-## Asistente de Configuración Global de Primera Ejecución
+### Método 3: Instalación de Desarrollo (Desde el Código Fuente)
+*   **Ideal para**: Colaboradores y programadores trabajando directamente en el código de PyCk.
+*   **Acción**: Clona el repositorio y ejecuta los instaladores nativos en la raíz:
+    *   **Opción A: Instalación Universal Python**: `python setup.py`
+    *   **Opción B: Instalador de Windows**: `setup.bat`
+    *   **Opción C: Script de Unix Shell**: `sh setup.sh`
+
+---
+
+### Método 4: Compilador Standalone Automático (`build_exe.py`)
+Para empaquetar tú mismo PyCk en un binario ejecutable único de grado empresarial:
+```bash
+python build_exe.py [opciones]
+```
+**Opciones y Argumentos del Compilador**:
+*   `--include-installer`: Genera el instalador interactivo offline `install.py` al lado del binario en la carpeta de versión.
+*   `--target {windows,linux}`: Fuerza la compilación del OS objetivo. Si compilas para Linux en Windows, busca WSL o levanta un contenedor ligero Docker de `python:3.11-slim` para compilar un binario Linux nativo al vuelo de manera transparente.
+
+---
+
+## Asistente de Configuración y Reconfiguración Global
 
 La primera vez que corras cualquier comando de PyCk, si el archivo de configuración `~/.pyck/config.json` no existe, se limpiará la pantalla de la consola y arrancará un **Asistente Interactivo** (Vite-style):
-1. **Política de Sandbox**:
+1. **Directorio de Instalación Física** (Solo al ejecutar el binario standalone): Selecciona un directorio permanente para instalar `pym.exe` (por defecto `~/.pyck/bin`). El asistente copiará automáticamente el ejecutable en ejecución a esta ubicación, evitando que tu carpeta de descargas temporales contamine el PATH del sistema.
+2. **Política de Sandbox**:
    *   **Opción A (Estricta - Recomendada)**: Sandbox activo para TODOS los scripts por defecto (Red, archivos y entorno virtualizados/restringidos).
    *   **Opción B (Balanceada)**: Sandbox activo solo en instalaciones y scripts con riesgos MEDIOS/ALTOS detectados.
-2. **Horas de Cuarentena**: Configura el límite de horas deseadas para cuarentena (72 horas por defecto).
-3. **Nombre del Autor**: Configura tu firma global como desarrollador (ej. `Juan Pérez`) para auto-rellenar en todos tus nuevos proyectos.
-4. **Licencia por Defecto**: Elige el tipo de licenciamiento predilecto (`MIT`, `Apache-2.0`, `GPL-3.0`, `Proprietary`).
-5. **Motor Preferido**: Elige si prefieres usar Rust `uv` a máxima velocidad o fallback nativo `pip`.
-6. **Piloto Automático de Auditorías**: Activa o desactiva la ejecución automática de auditorías (`pym audit`) después de cada instalación de paquetes exitosa.
+3. **Horas de Cuarentena**: Configura el límite de horas deseadas para cuarentena (72 horas por defecto).
+4. **Nombre del Autor**: Configura tu firma global como desarrollador (ej. Jane Doe) para auto-rellenar en todos tus nuevos proyectos.
+5. **Licencia por Defecto**: Elige el tipo de licenciamiento predilecto (`MIT`, `Apache-2.0`, `GPL-3.0`, `Proprietary`).
+6. **Motor Preferido**: Elige si prefieres usar Rust `uv` a máxima velocidad o fallback nativo `pip`.
+7. **Piloto Automático de Auditorías**: Activa o desactiva la ejecución automática de auditorías (`pym audit`) después de cada instalación de paquetes exitosa.
+8. **Registro en el PATH**: Te pregunta si deseas registrar de forma persistente `pym` en tu variable de entorno PATH apuntando al directorio permanente (`~/.pyck/bin`), notificando instantáneamente al sistema operativo.
+
+### Reconfiguración Dinámica
+Si mueves tu ejecutable de ubicación (ej., cambiar `pym.exe` a otra carpeta permanente) o deseas cambiar cualquiera de tus preferencias globales, puedes re-lanzar el asistente en cualquier momento:
+*   **Comando Directo**: `pym setup`
+*   **Subcomando de Configuración**: `pym config wizard` o `pym config setup`
+
+> [!NOTE]
+> Al correr el asistente de reconfiguración, PyCk **cargará automáticamente tu configuración actual** como valores por defecto en cada pregunta. Puedes presionar simplemente **Enter (vacío)** en cualquier pregunta (incluyendo la carpeta de instalación física) para mantener tu ajuste existente sin modificarlo.
 
 ---
 
@@ -243,21 +282,21 @@ Mapea tus dependencias declaradas y sus dependencias transitivas para desinstala
 
 ---
 
-### 8. `pym clean` [NUEVO]
+### 8. `pym clean` 
 Limpia recursivamente el área de trabajo de archivos de cache y residuos de Python, Pytest, Ruff y compiladores (`__pycache__`, `.pytest_cache`, `.ruff_cache`, `build/`, `dist/`, `.pyc`, `.pyo`, `.pyd`). Presenta una ficha detallando directorios borrados, archivos purgados y megabytes liberados.
 
 *   **Sintaxis**: `pym clean`
 
 ---
 
-### 9. `pym lock` [NUEVO]
+### 9. `pym lock` 
 Verifica los requerimientos y regenera manualmente el archivo `pyckage.lock`, calculando y bloqueando las firmas hash de seguridad SHA256 correspondientes a PyPI de cada paquete.
 
 *   **Sintaxis**: `pym lock`
 
 ---
 
-### 10. `pym update` | `pym upgrade` [NUEVO]
+### 10. `pym update` | `pym upgrade` 
 Realiza actualizaciones seguras (respetando la cuarentena de 72h) de todas tus dependencias o de un paquete específico, actualizando automáticamente el archivo `pyckage.json` y `pyckage.lock`.
 
 *   **Sintaxis**: `pym update [nombre_paquete] [opciones]`
@@ -288,6 +327,26 @@ Muestra un tablero visual con estadísticas de salud de tu proyecto actual.
 
 ### 14. `pym list`
 Muestra una elegante tabla ASCII listando todos los paquetes activos instalados en tu `.venv` con sus respectivas clasificaciones.
+
+---
+
+### 15. `pym config`
+Permite consultar, listar o modificar las claves de configuración global interactiva de tu usuario directamente desde la CLI.
+
+*   **Sintaxis**: `pym config <acción> [clave] [valor]`
+*   **Subcomandos**:
+    *   `pym config show` / `pym config list`: Muestra una tarjeta visual de consola con todas tus preferencias actuales y sus valores.
+    *   `pym config get <clave>`: Imprime el valor plano de una preferencia específica.
+    *   `pym config set <clave> <valor>`: Modifica y persiste dinámicamente un valor de configuración global en `~/.pyck/config.json`.
+*   **Ejemplo**: `pym config set quarantineHours 48`
+
+---
+
+### 16. `pym setup`
+Vuelve a lanzar el Asistente de Configuración Global interactivo, permitiéndote reconfigurar las directivas de Sandbox, tiempos de cuarentena, firma de autor, licencias predilectas, motores de empaquetado, y **registrar o actualizar de forma persistente tu PATH** apuntando al directorio de instalación física del ejecutable de PyCk.
+
+*   **Sintaxis**: `pym setup`
+*   **Comportamiento**: Limpia el archivo de configuración global actual y ejecuta la inicialización completa `ensure_global_setup()` en la sesión de terminal activa.
 
 ---
 

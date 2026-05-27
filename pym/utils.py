@@ -145,6 +145,8 @@ def get_key():
 
 # Interactive Vite-like prompts
 def ask_text(prompt_text, default=""):
+    if not sys.stdin.isatty():
+        return default
     try:
         suffix = f" {Colors.GRAY}({default}){Colors.RESET}" if default else ""
         sys.stdout.write(f"{Colors.BOLD}?{Colors.RESET} {prompt_text}{suffix}: ")
@@ -157,6 +159,8 @@ def ask_text(prompt_text, default=""):
         sys.exit(1)
 
 def ask_confirm(prompt_text, default=True):
+    if not sys.stdin.isatty():
+        return default
     try:
         opts = " [Y/n] " if default else " [y/N] "
         sys.stdout.write(f"{Colors.BOLD}?{Colors.RESET} {prompt_text}{Colors.CYAN}{opts}{Colors.RESET}")
@@ -175,6 +179,11 @@ def ask_select(prompt_text, options, default_idx=0):
     Renders a stunning interactive keyboard menu where options are selected
     with UP/DOWN arrow keys, featuring dynamic text changes!
     """
+    if not sys.stdin.isatty():
+        fallback_opt = options[default_idx]
+        print(f"{Colors.GREEN}✔{Colors.RESET} {Colors.BOLD}{prompt_text}{Colors.RESET} {Colors.CYAN}❯ {fallback_opt} (auto){Colors.RESET}")
+        return fallback_opt
+
     current_idx = default_idx
     sys.stdout.write(Colors.HIDE_CURSOR)
     sys.stdout.flush()

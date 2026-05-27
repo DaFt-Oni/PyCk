@@ -115,23 +115,15 @@ Spawned scripts run inside isolated environments:
             ▼                  ▼                  ▼
    ┌────────────────┐ ┌────────────────┐ ┌────────────────┐
    │ Project State  │ │  Sandbox & UI  │ │  Security &    │
-   │ pyckage.json   │ │  Isolated Env  │ │  Quarantine    │
-   └────────────────┘ └────────────────┘ └────────────────┘
-            │                  │                  │
-            └──────────────────┼──────────────────┘
-                               ▼
-   ┌────────────────────────────────────────────────────────┐
-   │             Local Virtual Environment (.venv)          │
-   └────────────────────────────────────────────────────────┘
-```
+   │ ## Installation & Setup Methods
+
+PyCk offers multiple deployment pathways tailored for local developers, DevOps engineers, and system administrators managing secure, isolated production servers.
 
 ---
 
-## Installation & Setup
-
-### Method 1: One-Liner Web Installer (Recommended)
-Registers `pym` persistently in your system path and boots the Setup Wizard automatically:
-
+### Method 1: One-Liner Web Installer (Online / Interactive)
+*   **Best For**: Quick developer local installations with online connectivity.
+*   **Description**: Downloads the latest release, registers `pym` persistently in your user environment variable `PATH`, and triggers the global Setup Wizard automatically.
 *   **Windows (PowerShell)**:
     ```powershell
     irm https://raw.githubusercontent.com/DaFt-Oni/PyCk/main/bin/install_cli.ps1 | iex
@@ -141,33 +133,68 @@ Registers `pym` persistently in your system path and boots the Setup Wizard auto
     curl -fsSL https://raw.githubusercontent.com/DaFt-Oni/PyCk/main/bin/install_cli.sh | bash
     ```
 
-### Method 2: Interactive Local Setup (From Source)
-Run the native setup files from the root of your local repository clone:
-*   **Option A: Universal Setup**: `python setup.py`
-*   **Option B: Windows Setup**: `setup.bat`
-*   **Option C: Unix Setup**: `sh setup.sh`
+---
 
-### Method 3: Standalone Binary Compiler
-To compile PyCk into a single-file executable binary independently:
-1. In the project root, run:
-   ```bash
-   python build_exe.py
-   ```
-2. Your bundled binary will reside in a timestamped folder: `bin/v[timestamp]/pym.exe` (Windows) or `bin/v[timestamp]/pym` (Unix).
+### Method 2: Standalone Local / Offline Installer (Zero-Dependency)
+*   **Best For**: Air-gapped corporate servers, headless automated provisioning (Ansible, Chef), and strict security environments where executing compiled binaries directly to perform system changes is restricted.
+*   **Step 1**: Compile the standalone executable using the packaging suite:
+    ```bash
+    python build_exe.py --include-installer
+    ```
+    *(This compiles a self-contained `pym` binary and generates a plain-text, zero-dependency helper installer script named `install.py` next to it under `bin/v[timestamp]/`)*.
+*   **Step 2**: Choose one of the deployment models:
+    *   **Method 2.1: Scripted / Auditable Installer (`install.py`)**:
+        Copy the generated folder `bin/v[timestamp]/` to the target server and execute the installer:
+        ```bash
+        python install.py
+        ```
+        *(This plain-text script cleanly handles directory pre-provisioning, copies the binary, registers user PATH variables persistently, and initializes your preferences. Security compliance teams can fully inspect and audit `install.py` before execution)*.
+    *   **Method 2.2: Direct Executable Self-Setup**:
+        Simply copy only the compiled binary (`pym.exe` or `pym`) and execute it directly in your terminal. Since no configuration is detected, it automatically launches the Setup Wizard on its very first run!
 
 ---
 
-## Global First-Run Setup Wizard
+### Method 3: Source-Code Developer Installation (From Source)
+*   **Best For**: Contributors and developers working directly on PyCk's source code.
+*   **Action**: Clone the repository and run the native installer at the root:
+    *   **Option A: Universal Python Setup**: `python setup.py`
+    *   **Option B: Windows Setup**: `setup.bat`
+    *   **Option C: Unix Setup**: `sh setup.sh`
+
+---
+
+### Method 4: Standalone Compilation Suite (`build_exe.py`)
+To compile PyCk into a single standalone binary yourself:
+```bash
+python build_exe.py [options]
+```
+**Compiler Arguments & Options**:
+*   `--include-installer`: Generates the optional standalone `install.py` wizard next to the binary in the version folder.
+*   `--target {windows,linux}`: Forces OS compilation format. If targeting Linux from a Windows machine, the compiler automatically detects WSL or launches a lightweight `python:3.11-slim` Docker container to bundle a native Linux ELF binary on the fly!
+
+---
+
+## Global Setup & Reconfiguration Wizard
 
 The first time you execute any command in PyCk, if the configuration file `~/.pyck/config.json` does not exist, the console will clear, and launch a gorgeous Vite-like **Setup Wizard**:
-1. **Choose Sandbox Policy**:
+1. **Physical Installation Directory** (Only when running the standalone binary): Select a permanent folder to install the executable `pym.exe` (defaults to `~/.pyck/bin`). The wizard will automatically copy the running binary to this location, preventing your temporary folders (like `Downloads`) from being registered in system variables.
+2. **Choose Sandbox Policy**:
    *   **Option A (Strict - Recommended)**: Strict sandboxing active on ALL scripts by default. Outward network, environment variables, and file systems are virtualized/restricted.
    *   **Option B (Balanced)**: Sandbox active only on dependencies installation or scripts with MEDIUM/HIGH risk flags.
-2. **Quarantine hours**: Set default package quarantine time in hours (defaults to `72` hours).
-3. **Developer Author Name**: Input your global author name (e.g. `Jane Doe`) to pre-fill all `pym init` scaffolds.
-4. **Default License**: Select your default project license (`MIT`, `Apache-2.0`, `GPL-3.0`, `Proprietary`).
-5. **Preferred Engine**: Pick your default package resolver engine (`uv` for ultra-fast Rust speed vs `pip` standard native fallback).
-6. **Auto-Audit Autopilot**: Enable or disable automated security audits (`pym audit`) after every package installation process.
+3. **Quarantine hours**: Set default package quarantine time in hours (defaults to `72` hours).
+4. **Developer Author Name**: Input your global author name (e.g. Jane Doe) to pre-fill all `pym init` scaffolds.
+5. **Default License**: Select your default project license (`MIT`, `Apache-2.0`, `GPL-3.0`, `Proprietary`).
+6. **Preferred Engine**: Pick your default package resolver engine (`uv` for ultra-fast Rust speed vs `pip` standard native fallback).
+7. **Auto-Audit Autopilot**: Enable or disable automated security audits (`pym audit`) after every package installation process.
+8. **PATH Env Registration**: Offers to register `pym` persistently in your operating system's global environment `PATH` pointing to the permanent installation folder (`~/.pyck/bin`), broadcasting changes instantly across active shell sessions.
+
+### Dynamic Reconfiguration
+If you migrate your folder (e.g., moving `pym.exe` to a new directory) or want to change your settings, you can re-launch the Setup Wizard anytime:
+*   **Direct Command**: `pym setup`
+*   **Config Subcommand**: `pym config wizard` or `pym config setup`
+
+> [!NOTE]
+> During a reconfigure setup, PyCk **automatically loads your existing configuration** as default answers. You can simply press **Enter (empty value)** on any question (including the physical installation directory) to keep your current setting without modifying it.
 
 ---
 
@@ -243,21 +270,21 @@ Recursively maps direct declared dependencies and transitive requirements to wip
 
 ---
 
-### 8. `pym clean` [NEW]
+### 8. `pym clean`
 Recursively cleans the project workspace directory of Python caching clutter, Pytest cache registries, Ruff lint caches, and PyInstaller build directories (`__pycache__`, `.pytest_cache`, `.ruff_cache`, `build/`, `dist/`, `.pyc`, `.pyo`, `.pyd`). Prints a visual dashboard showing deleted files and total MBs freed up.
 
 *   **Syntax**: `pym clean`
 
 ---
 
-### 9. `pym lock` [NEW]
+### 9. `pym lock`
 Verifies dependencies requirements and manually regenerates the `pyckage.lock` file, calculating and locking down all secure SHA256 PyPI package hashes.
 
 *   **Syntax**: `pym lock`
 
 ---
 
-### 10. `pym update` | `pym upgrade` [NEW]
+### 10. `pym update` | `pym upgrade`
 Performs quarantine-safe upgrades of either all dependencies or a specific package. Resolves and locks versions that exceed the configured quarantine window (72 hours), updating both `pyckage.json` and `pyckage.lock`.
 
 *   **Syntax**: `pym update [package_name] [options]`
@@ -288,6 +315,26 @@ Displays a gorgeous dashboard panel showing your current project environment hea
 
 ### 14. `pym list`
 Displays an elegant, visual ASCII table listing all packages currently active inside `.venv` along with their category (Core, Dev, Transitive).
+
+---
+
+### 15. `pym config`
+Allows viewing, retrieving, or setting global user configuration keys dynamically from the command line interface.
+
+*   **Syntax**: `pym config <action> [key] [value]`
+*   **Subcommands**:
+    *   `pym config show` / `pym config list`: Displays a visual ASCII card listing all current global configurations.
+    *   `pym config get <key>`: Prints the raw value of a designated configuration key.
+    *   `pym config set <key> <value>`: Updates a global preference and saves it dynamically to `~/.pyck/config.json`.
+*   **Example**: `pym config set quarantineHours 48`
+
+---
+
+### 16. `pym setup`
+Re-boots the interactive global Setup Wizard, allowing you to completely re-configure Sandbox options, quarantine times, default author details, default engines, and persistently re-register or update your system environment `PATH` pointing to the physical install directory.
+
+*   **Syntax**: `pym setup`
+*   **Behavior**: Deletes the active global configuration and triggers a fresh `ensure_global_setup()` process inside the current terminal session.
 
 ---
 
